@@ -37,6 +37,7 @@
     <div class="card"><h2>GPU</h2><div class="big" id="gpu">-</div><div class="small" id="gpu2"></div></div>
     <div class="card"><h2>Nodo</h2><div class="big" id="altura">-</div><div class="small" id="nodo2"></div></div>
     <div class="card"><h2>Shares</h2><div class="big" id="shares">-</div><div class="small" id="hw">no pagan por s&iacute; solos</div></div>
+    <div class="card full"><h2>CPU (RandomX)</h2><div class="big" id="cpu">-</div><div class="small" id="cpu2"></div></div>
     <div class="card full"><h2>Bloques encontrados</h2><div id="bloques" class="small">-</div></div>
     <div class="card full"><h2>Saldo</h2><div class="small">No disponible todav&iacute;a (la billetera aparece &laquo;offline&raquo;).</div></div>
     <div class="card full" id="errbox" hidden><h2>&Uacute;ltimos mensajes de error</h2><pre id="errores"></pre></div>
@@ -65,6 +66,7 @@ async function cargar(){
     txt('gpu', d.gpu_uso+'%'); txt('gpu2', d.gpu_w+' W, '+d.gpu_c+' °C');
     txt('altura', d.altura); txt('nodo2', 'estado '+d.sync+', '+d.pares+' pares');
     txt('shares', d.ok+' / '+d.rej);
+    if(d.cpu_hr1 !== undefined){ txt('cpu', d.cpu_hr1); txt('cpu2', 'promedio 15 min: '+d.cpu_hr15+' | shares '+d.cpu_ok+' / '+d.cpu_rej); }
     if(d.hw !== undefined) txt('hw', 'aceptados / rechazados. Errores de hardware: '+d.hw);
     const bl = $('bloques'); bl.textContent='';
     if(d.bloques && d.bloques.length){ const ul=document.createElement('ul'); d.bloques.forEach(x=>{const li=document.createElement('li'); li.textContent=x; ul.appendChild(li);}); bl.appendChild(ul); }
