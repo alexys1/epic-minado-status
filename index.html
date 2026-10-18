@@ -43,11 +43,11 @@
     <div class="card full" id="errbox" hidden><h2>&Uacute;ltimos mensajes de error</h2><pre id="errores"></pre></div>
     <div class="card full"><h2>Historial reciente</h2><div class="tablewrap"><table><thead><tr><th>Hora</th><th>Altura</th><th>MH/s</th><th>W</th><th>&deg;C</th><th>Shares</th></tr></thead><tbody id="hist"></tbody></table></div></div>
   </div>
-  <footer>Se refresca sola cada minuto. Los datos los sube la PC cada pocos minutos. La GPU descansa cuando el bloque no es ProgPoW.</footer>
+  <footer>Se refresca sola cada 30 s. La PC sube los datos cada minuto. La GPU descansa cuando el bloque no es ProgPoW.</footer>
 </main>
 <script>
 const URL_DATOS = 'https://raw.githubusercontent.com/alexys1/epic-minado-status/datos/status.json';
-const VIEJO_MIN = 12;  // minutos sin datos nuevos => aviso
+const VIEJO_MIN = 6;  // minutos sin datos nuevos => aviso
 const $ = id => document.getElementById(id);
 function txt(id, v){ $(id).textContent = v; }
 function setBanner(cls, titulo, sub){ const b=$('banner'); b.className='banner '+cls; b.textContent=titulo; if(sub){ const d=document.createElement('div'); d.className='sub'; d.textContent=sub; b.appendChild(d); } }
@@ -81,7 +81,7 @@ async function cargar(){
     });
   }catch(e){ setBanner('warn','No se pudieron cargar los datos', String(e)); }
 }
-cargar(); setInterval(cargar, 60000);
+cargar(); setInterval(cargar, 30000);
 </script>
 </body>
 </html>
