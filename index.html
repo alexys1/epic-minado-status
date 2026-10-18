@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Minado EPIC</title>
+<style>
+  :root { --bg:#f4f6f8; --card:#ffffff; --txt:#16202a; --mut:#5d6b78; --ok:#1a7f45; --bad:#c62828; --warn:#b26a00; --line:#e1e6ea; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0e1419; --card:#18212a; --txt:#e8eef3; --mut:#93a3b1; --ok:#47c97a; --bad:#ff6b6b; --warn:#f0b04a; --line:#26323d; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--txt); font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
+  main { max-width:720px; margin:0 auto; padding:16px; }
+  h1 { font-size:20px; margin:4px 0 12px; }
+  .banner { padding:14px 16px; border-radius:12px; font-weight:600; margin-bottom:12px; border:1px solid var(--line); background:var(--card); }
+  .banner.ok { border-left:6px solid var(--ok); } .banner.bad { border-left:6px solid var(--bad); } .banner.warn { border-left:6px solid var(--warn); }
+  .sub { color:var(--mut); font-size:13px; font-weight:400; margin-top:4px; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px; }
+  .card h2 { font-size:12px; text-transform:uppercase; letter-spacing:.04em; color:var(--mut); margin:0 0 6px; font-weight:600; }
+  .big { font-size:22px; font-weight:700; } .small { color:var(--mut); font-size:13px; }
+  .full { grid-column:1 / -1; }
+  ul { margin:6px 0 0; padding-left:18px; } li { margin:3px 0; word-break:break-word; }
+  table { width:100%; border-collapse:collapse; font-size:13px; } th,td { text-align:left; padding:5px 4px; border-bottom:1px solid var(--line); } th { color:var(--mut); font-weight:600; }
+  .tablewrap { overflow-x:auto; }
+  pre { white-space:pre-wrap; word-break:break-word; font-size:12px; margin:6px 0 0; }
+  .ok-t { color:var(--ok); } .bad-t { color:var(--bad); }
+  footer { color:var(--mut); font-size:12px; margin:14px 0 4px; text-align:center; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Minado EPIC en solitario</h1>
+  <div id="banner" class="banner warn">Cargando&hellip;</div>
+  <div class="grid">
+    <div class="card"><h2>Hashrate (1 min)</h2><div class="big" id="hr1">-</div><div class="small" id="hr15"></div></div>
+    <div class="card"><h2>GPU</h2><div class="big" id="gpu">-</div><div class="small" id="gpu2"></div></div>
+    <div class="card"><h2>Nodo</h2><div class="big" id="altura">-</div><div class="small" id="nodo2"></div></div>
+    <div class="card"><h2>Shares</h2><div class="big" id="shares">-</div><div class="small">no pagan por s&iacute; solos</div></div>
+    <div class="card full"><h2>Bloques encontrados</h2><div id="bloques" class="small">-</div></div>
+    <div class="card full"><h2>Saldo</h2><div class="small">No disponible todav&iacute;a (la billetera aparece &laquo;offline&raquo;).</div></div>
+    <div class="card full" id="errbox" hidden><h2>&Uacute;ltimos mensajes de error</h2><pre id="errores"></pre></div>
+    <div class="card full"><h2>Historial reciente</h2><div class="tablewrap"><table><thead><tr><th>Hora</th><th>Altura</th><th>MH/s</th><th>W</th><th>&deg;C</th><th>Shares</th></tr></thead><tbody id="hist"></tbody></table></div></div>
+  </div>
+  <footer>Se refresca sola cada minuto. Los datos los sube la PC cada pocos minutos. La GPU descansa cuando el bloque no es ProgPoW.</footer>
+</main>
+<script>
+const URL_DATOS = 'https://raw.githubusercontent.com/alexys1/epic-minado-status/datos/status.json';
+const VIEJO_MIN = 12;  // minutos sin datos nuevos => aviso
+const $ = id => document.getElementById(id);
+function txt(id, v){ $(id).textContent = v; }
+function setBanner(cls, titulo, sub){ const b=$('banner'); b.className='banner '+cls; b.textContent=titulo; if(sub){ const d=document.createElement('div'); d.className='sub'; d.textContent=sub; b.appendChild(d); } }
+function hace(seg){ if(seg<90) return 'hace '+Math.round(seg)+' s'; if(seg<5400) return 'hace '+Math.round(seg/60)+' min'; return 'hace '+(seg/3600).toFixed(1)+' h'; }
+async function cargar(){
+  try{
+    const r = await fetch(URL_DATOS + '?t=' + Date.now(), {cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const d = await r.json();
+    const edad = Date.now()/1000 - d.ts;
+    const alertas = d.alertas || [];
+    if(edad > VIEJO_MIN*60){ setBanner('bad','Sin datos nuevos', 'Ultima actualizacion '+hace(edad)+'. La PC puede estar apagada o el publicador detenido.'); }
+    else if(alertas.length){ setBanner('bad','Hay problemas', alertas.join(' | ')); }
+    else { setBanner('ok','Todo funcionando', 'Actualizado '+hace(edad)+' ('+d.hora+')'); }
+    txt('hr1', d.hr1); txt('hr15', 'promedio 15 min: '+d.hr15);
+    txt('gpu', d.gpu_uso+'%'); txt('gpu2', d.gpu_w+' W, '+d.gpu_c+' °C');
+    txt('altura', d.altura); txt('nodo2', 'estado '+d.sync+', '+d.pares+' pares');
+    txt('shares', d.ok+' / '+d.rej);
+    const bl = $('bloques'); bl.textContent='';
+    if(d.bloques && d.bloques.length){ const ul=document.createElement('ul'); d.bloques.forEach(x=>{const li=document.createElement('li'); li.textContent=x; ul.appendChild(li);}); bl.appendChild(ul); }
+    else { bl.textContent = 'Ninguno detectado todavía. (Se detecta por el log del nodo; no está verificado hasta que salga el primero.)'; }
+    const er = (d.errores||[]); $('errbox').hidden = er.length===0; txt('errores', er.join('\n'));
+    const tb = $('hist'); tb.textContent='';
+    (d.historial||[]).slice().reverse().forEach(h=>{
+      const tr=document.createElement('tr');
+      [h.hora, h.altura, h.hr1, h.gpu_w, h.gpu_c, h.ok+'/'+h.rej].forEach(v=>{const td=document.createElement('td'); td.textContent=v; tr.appendChild(td);});
+      tb.appendChild(tr);
+    });
+  }catch(e){ setBanner('warn','No se pudieron cargar los datos', String(e)); }
+}
+cargar(); setInterval(cargar, 60000);
+</script>
+</body>
+</html>
