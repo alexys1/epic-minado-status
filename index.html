@@ -70,7 +70,8 @@ async function cargar(){
     else { bl.textContent = 'Ninguno detectado todavía. (Se detecta por el log del nodo; no está verificado hasta que salga el primero.)'; }
     const er = (d.errores||[]); $('errbox').hidden = er.length===0; txt('errores', er.join('\n'));
     const tb = $('hist'); tb.textContent='';
-    (d.historial||[]).slice().reverse().forEach(h=>{
+    let hs = d.historial; if(hs && hs.value) hs = hs.value; if(hs && !Array.isArray(hs)) hs = [hs];
+    (hs||[]).filter(h=>h && h.ok!==undefined).slice().reverse().forEach(h=>{
       const tr=document.createElement('tr');
       [h.hora, h.altura, h.hr1, h.gpu_w, h.gpu_c, h.ok+'/'+h.rej].forEach(v=>{const td=document.createElement('td'); td.textContent=v; tr.appendChild(td);});
       tb.appendChild(tr);
