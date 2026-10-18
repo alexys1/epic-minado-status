@@ -43,10 +43,26 @@
     <div class="card full" id="errbox" hidden><h2>&Uacute;ltimos mensajes de error</h2><pre id="errores"></pre></div>
     <div class="card full"><h2>Historial reciente</h2><div class="tablewrap"><table><thead><tr><th>Hora</th><th>Altura</th><th>MH/s</th><th>W</th><th>&deg;C</th><th>Shares</th></tr></thead><tbody id="hist"></tbody></table></div></div>
   </div>
-  <footer>Se refresca sola cada 30 s. La PC sube los datos cada minuto. La GPU descansa cuando el bloque no es ProgPoW.</footer>
+  <footer>Se refresca sola cada minuto. La PC sube los datos cada 45 s; GitHub puede sumar hasta ~1 min. La GPU descansa cuando el bloque no es ProgPoW.</footer>
 </main>
 <script>
-const URL_DATOS = 'https://raw.githubusercontent.com/alexys1/epic-minado-status/datos/status.json';
+// La API de GitHub entrega el dato fresco; raw.githubusercontent.com guarda cache de hasta 5 min (solo respaldo).
+const URL_API = 'https://api.github.com/repos/alexys1/epic-minado-status/contents/status.json?ref=datos';
+const URL_RAW = 'https://raw.githubusercontent.com/alexys1/epic-minado-status/datos/status.json';
+async function leer(){
+  try{
+    const r = await fetch(URL_API, {headers:{'Accept':'application/vnd.github+json'}});
+    if(!r.ok) throw new Error('API '+r.status);
+    const o = await r.json();
+    const bin = atob(o.content.replace(/\s/g,''));
+    const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+    return JSON.parse(new TextDecoder('utf-8').decode(bytes));
+  }catch(e){
+    const r = await fetch(URL_RAW + '?t=' + Date.now(), {cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return await r.json();
+  }
+}
 const VIEJO_MIN = 6;  // minutos sin datos nuevos => aviso
 const $ = id => document.getElementById(id);
 function txt(id, v){ $(id).textContent = v; }
@@ -54,9 +70,7 @@ function setBanner(cls, titulo, sub){ const b=$('banner'); b.className='banner '
 function hace(seg){ if(seg<90) return 'hace '+Math.round(seg)+' s'; if(seg<5400) return 'hace '+Math.round(seg/60)+' min'; return 'hace '+(seg/3600).toFixed(1)+' h'; }
 async function cargar(){
   try{
-    const r = await fetch(URL_DATOS + '?t=' + Date.now(), {cache:'no-store'});
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    const d = await r.json();
+    const d = await leer();
     const edad = Date.now()/1000 - d.ts;
     const alertas = d.alertas || [];
     if(edad > VIEJO_MIN*60){ setBanner('bad','Sin datos nuevos', 'Ultima actualizacion '+hace(edad)+'. La PC puede estar apagada o el publicador detenido.'); }
@@ -81,7 +95,7 @@ async function cargar(){
     });
   }catch(e){ setBanner('warn','No se pudieron cargar los datos', String(e)); }
 }
-cargar(); setInterval(cargar, 30000);
+cargar(); setInterval(cargar, 60000);
 </script>
 </body>
 </html>
