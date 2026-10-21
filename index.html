@@ -36,8 +36,8 @@
   <div id="banner" class="banner warn">Cargando&hellip;</div>
   <div class="grid" id="monedas"></div>
   <h3>Comparaci&oacute;n de rendimiento</h3>
-  <div class="tablewrap"><table><thead><tr><th>Moneda</th><th>Tiempo</th><th>Hashrate prom.</th><th>Consumo</th><th>Energ&iacute;a</th><th>Temp. m&aacute;x.</th><th>Rend./h</th></tr></thead><tbody id="comp"></tbody></table></div>
-  <div class="small" style="margin-top:6px">Para saber cu&aacute;l rinde m&aacute;s, compara el rendimiento por hora (en d&oacute;lares) contra el costo de la energ&iacute;a.</div>
+  <div class="tablewrap"><table><thead><tr><th>Moneda</th><th>Tiempo</th><th>Hashrate prom.</th><th>Consumo</th><th>Energ&iacute;a</th><th>Temp. m&aacute;x.</th><th>Rend./h</th><th>Costo luz</th><th>Neto</th></tr></thead><tbody id="comp"></tbody></table></div>
+  <div class="small" style="margin-top:6px" id="nota"></div>
   <h3>Eventos</h3>
   <ul class="ev" id="ev"></ul>
   <footer>Se refresca sola cada minuto. La PC sube los datos cada ~2 min; GitHub puede sumar hasta ~1 min. Sin direcciones ni claves.</footer>
@@ -102,8 +102,11 @@ async function cargar(){
     const box=$('monedas'); box.textContent=''; (d.monedas||[]).forEach(m=>box.appendChild(tarjeta(m)));
     const tb=$('comp'); tb.textContent='';
     (d.monedas||[]).forEach(m=>{ const tr=document.createElement('tr');
-      [m.sym, n(m.horas,2)+' h', n(m.hr_prom,1)+' '+(m.unidad||''), n(m.w_prom,0)+' W', n(m.kwh,2)+' kWh', n(m.tmax,0)+' °C', (m.por_hora===null?'-':n(m.por_hora,4)+'/h')]
+      [m.sym, n(m.horas,2)+' h', n(m.hr_prom,1)+' '+(m.unidad||''), n(m.w_prom,0)+' W', n(m.kwh,2)+' kWh', n(m.tmax,0)+' °C', (m.por_hora===null?'-':n(m.por_hora,4)+'/h'),
+         (m.costo_pen===undefined?'-':'S/ '+n(m.costo_pen,2)+(m.costo_usd!=null?' ($'+n(m.costo_usd,2)+')':'')),
+         (m.neto_usd==null?'-':(m.neto_usd<0?'-':'')+'$'+n(Math.abs(m.neto_usd),2))]
         .forEach(v=>{ const td=document.createElement('td'); td.textContent=v; tr.appendChild(td); }); tb.appendChild(tr); });
+    $('nota').textContent = d.costo_kwh_pen ? 'Luz: S/ '+n(d.costo_kwh_pen,4)+' por kWh'+(d.pen_por_usd?' (S/ '+n(d.pen_por_usd,3)+' = US$ 1)':'')+', solo el consumo de la GPU. Neto = valor minado - costo de luz.' : '';
     const ev=$('ev'); ev.textContent=''; (d.eventos||[]).forEach(x=>ev.appendChild(el('li','',x)));
   }catch(e){ setBanner('warn','No se pudieron cargar los datos', String(e)); }
 }
