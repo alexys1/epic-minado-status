@@ -62,7 +62,7 @@ async function leer(){
 }
 const VIEJO_MIN = 8;
 const $ = id => document.getElementById(id);
-const COLOR = {CFX:'var(--cfx)', ETC:'var(--etc)'};
+const COLOR = {CFX:'var(--cfx)', ETC:'var(--etc)', PRL:'#a371f7'};
 function el(tag, cls, txt){ const e=document.createElement(tag); if(cls) e.className=cls; if(txt!==undefined) e.textContent=txt; return e; }
 function n(v, d){ return (v===null||v===undefined||v==='') ? '-' : Number(v).toLocaleString('es', {minimumFractionDigits:d, maximumFractionDigits:d}); }
 function hs(v){ v=Number(v)||0; if(v>=1e9) return n(v/1e9,2)+' GH/s'; if(v>=1e6) return n(v/1e6,1)+' MH/s'; if(v>=1e3) return n(v/1e3,1)+' kH/s'; return n(v,0)+' H/s'; }
